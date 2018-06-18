@@ -1,0 +1,6 @@
+[package]
+name = "gcd"
+version = "0.0.1"
+authors = ["Oleg G.Kapranov <lugatex@yahoo.com>"]
+
+[dependencies]
