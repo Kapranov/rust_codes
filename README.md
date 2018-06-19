@@ -86,16 +86,39 @@ fn index() -> &'static str {
   "Rocket is a web framework for Rust!"
 }
 
+#[get("/hello")]
+fn hello() -> &'static str {
+  "Hello, Page!"
+}
+
+#[get("/world")]
+fn world() -> &'static str {
+  "World, Page!"
+}
+
+#[get("/hello/world")]
+fn hello_world() -> &'static str {
+  "World, page of the home!"
+}
+
 fn main() {
-  rocket::ignite().mount("/", routes![index]).launch();
+  rocket::ignite()
+    .mount("/", routes![
+      index,
+      hello,
+      world,
+      hello_world
+    ]).launch();
 }
 ```
+
 6. Compile and run the program: `cargo run`
 
 7. Visit `http://localhost:8000` to see your first Rocket application
    in action!
 
 ## Rust Examples
+
 
 ```rust
 use std;
@@ -116,10 +139,78 @@ fn fac(n: int) -> int {
 }
 ```
 
+```rust
+#[get("/data")]
+fn load_from_database() -> redis::RedisResult<String> {
+  let con = try!(client.get_connection());
+  try!(con.get("mydata"))
+}
+
+fn main() {
+  let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+  rocket::ignite().mount("/", routes![load_from_database]).launch();
+}
+```
+
+```rust
+use rocket::State;
+
+struct MyConfig(String);
+
+#[get("/")]
+fn index(state: State<MyConfig>) -> String {
+  format!("The config value is: {}", state.0)
+}
+
+#[get("/raw")]
+fn raw_config_value<'r>(state: State<'r, MyConfig>) -> &'r str {
+  state.inner().0.as_str()
+}
+
+fn main() {
+  let config = MyConfig("user input".to_string());
+  rocket::ignite()
+    .mount("/", routes![index, raw_config_value])
+    .manage(config)
+    .launch()
+}
+```
+
+```rust
+lazy_static! {
+  pub static ref DB_POOL: r2d2::Pool<ConnectionManager<PgConnection>> = {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
+    let config = r2d2::Config::default();
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = r2d2::Pool::new(config, manager).expect("Failed to create pool.");
+    pool
+  };
+}
+
+pub struct DB(r2d2::PooledConnection<ConnectionManager<PgConnection>>);
+
+impl DB {
+  pub fn conn(&self) -> &PgConnection {
+    &*self.0
+  }
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for DB {
+  type Error = r2d2::GetTimeout;
+  fn from_request(_: &'a Request<'r>) -> request::Outcome<Self, Self::Error> {
+    match DB_POOL.get() {
+      Ok(conn) => Success(DB(conn)),
+      Err(e) => Failure((Status::InternalServerError, e)),
+    }
+  }
+}
+```
+
 ## examples
 
 1. 'hello' - hello example
 2. 'gcd' - Euclid's algorithm
+3. 'hello-rocket' - first Rocket application
 
 [1]:  https://doc.rust-lang.org/stable/rust-by-example/hello/comment.html
 [2]:  https://www.rust-lang.org/en-US/
@@ -141,5 +232,6 @@ fn fac(n: int) -> int {
 [18]: https://rocket.rs/guide/overview/
 [19]: http://siciarz.net/24-days-rust-cargo-and-cratesio/
 [20]: https://github.com/ProgrammingRust/examples
+[21]: https://github.com/SergioBenitez/Rocket
 
 ### 18 June 2018 by Oleg G.Kapranov
