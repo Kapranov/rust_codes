@@ -223,9 +223,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for DB {
 
 ## examples
 
-1. 'hello' - hello example
-2. 'gcd' - Euclid's algorithm
-3. 'hello-rocket' - first Rocket application
+* 'hello' - hello example
+* 'gcd' - Euclid's algorithm
+* 'hello-rocket' - first Rocket application
 
 [1]:  https://doc.rust-lang.org/stable/rust-by-example/hello/comment.html
 [2]:  https://www.rust-lang.org/en-US/
