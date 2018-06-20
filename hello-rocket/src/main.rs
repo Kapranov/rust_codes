@@ -44,6 +44,21 @@ fn proba(name: &RawStr) -> String {
     format!("Hello, {}!", name.as_str())
 }
 
+#[get("/user/<id>")]
+fn user(id: usize) -> String {
+    format!("Hello your id: {}", id)
+}
+
+#[get("/user/<id>", rank = 2)]
+fn user_int(id: isize) -> String {
+    format!("Init your id: {}", id)
+}
+
+#[get("/user/<id>", rank = 3)]
+fn user_str(id: &RawStr) -> String {
+    format!("RawStr your id: {}", id)
+}
+
 mod other {
     #[get("/jurassic")]
     pub fn jurassic() -> &'static str {
@@ -66,6 +81,9 @@ fn main() {
                welcome,
                proba,
                forward,
+               user,
+               user_int,
+               user_str,
                other::jurassic,
                other::world
         ]).launch();
